@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sysexits.h>
 #include <stdio.h>
+#include <threads.h>
 
 #define eprintf(...) fprintf (stderr, __VA_ARGS__)
 
@@ -54,7 +55,7 @@ typedef enum {
   VAR,
   WHILE,
 
-  EF // done this way because STDIO
+  EF // EOF alias because it is already defined in stdio
 } TokenType;
 
 typedef struct Token {
@@ -67,6 +68,7 @@ size_t start = 0;
 size_t current = 0;
 size_t last_index = 0;
 size_t line = 1;
+size_t len = 0;
 
 void report(int line, char* where, char* message) {
   printf("[DEBUG] report()\n");
@@ -87,24 +89,42 @@ void print_tokens(Token* tokens) {
     printf("Token: %s %lu \n", t.lexeme, t.line);
   }
 }
+
 void add_token(TokenType type, Token* tokens, const char* source) {
   size_t length = current - start;
-  char* lexeme = malloc(length+1);
+  char* lexeme = malloc(length);
   printf("[DEBUG] start: %lu. current: %lu\n", start, current);
-  strncpy(lexeme, source + start, length+1);
+  strncpy(lexeme, source + start, length);
 
   tokens[last_index] = (Token) {type, lexeme, line };
   last_index++;
 }
 
+int is_at_end() {
+  return current >= len;
+}
+
+int match(const char* source, char expected) {
+  if (is_at_end()) return 0;
+  if (source[current] != expected) return 0;
+
+  current++;
+  return 1;
+}
+
 void scan_tokens(const char* source, Token* tokens) {
-  size_t len = strlen(source);
+  len = strlen(source);
+  last_index = 0;
+  start = 0;
+  current = 0;
+  line = 1;
 
   printf("[DEBUG] scan_tokens()\n");
-  /* while (!is_at_end()) { */
-  while (current < len) {
+  /* while (current < len) { */
+  while (!is_at_end()) {
     start = current;
-    char c = source[current];
+    char c = source[current++];
+    printf("[DEBUG] %c %lu %lu \n", c, start, current);
     switch (c) {
       case '(': add_token(LEFT_PAREN, tokens, source); break;
       case ')': add_token(RIGHT_PAREN, tokens, source); break;
@@ -116,8 +136,23 @@ void scan_tokens(const char* source, Token* tokens) {
       case '+': add_token(PLUS, tokens, source); break;
       case ';': add_token(SEMICOLON, tokens, source); break;
       case '*': add_token(STAR, tokens, source); break;
+      case '!':
+        add_token(match(source, '=') ? BANG_EQUAL : BANG, tokens, source);
+        break;
+      case '=':
+        add_token(match(source, '=') ? EQUAL_EQUAL : EQUAL, tokens, source);
+        break;
+      case '<':
+        add_token(match(source, '=') ? LESS_EQUAL : LESS, tokens, source);
+        break;
+      case '>':
+        add_token(match(source, '=') ? GREATER_EQUAL : GREATER, tokens, source);
+        break;
+      default:
+        error(line, "Unexpected character.");
+        break;
     }
-    current++;
+    line++;
   }
 
   tokens[last_index] = (Token){ EOF, "", line};
