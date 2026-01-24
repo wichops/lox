@@ -110,7 +110,7 @@ void run(const char* program) {
 }
 
 void run_file(const char* filename) {
-  char* buffer;
+  char* buffer = 0;
   long length;
 
   FILE* f = fopen(filename, "r");
