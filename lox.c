@@ -2,67 +2,11 @@
 #include <string.h>
 #include <sysexits.h>
 #include <stdio.h>
-#include <threads.h>
+#include "token.h"
 
 #define eprintf(...) fprintf (stderr, __VA_ARGS__)
 
 int HAD_ERROR = 0;
-
-typedef enum {
-  // Single-character tokens.
-  LEFT_PAREN,
-  RIGHT_PAREN,
-  LEFT_BRACE,
-  RIGHT_BRACE,
-  COMMA,
-  DOT,
-  MINUS,
-  PLUS,
-  SEMICOLON,
-  SLASH,
-  STAR,
-
-  // One or two character tokens.
-  BANG,
-  BANG_EQUAL,
-  EQUAL,
-  EQUAL_EQUAL,
-  GREATER,
-  GREATER_EQUAL,
-  LESS,
-  LESS_EQUAL,
-
-  // Literals.
-  IDENTIFIER,
-  STRING,
-  NUMBER,
-
-  // Keywords.
-  AND,
-  CLASS,
-  ELSE,
-  FALSE,
-  FUN,
-  FOR,
-  IF,
-  NIL,
-  OR,
-  PRINT,
-  RETURN,
-  SUPER,
-  THIS,
-  TRUE,
-  VAR,
-  WHILE,
-
-  EF // EOF alias because it is already defined in stdio
-} TokenType;
-
-typedef struct Token {
-  TokenType type;
-  char* lexeme;
-  size_t line;
-} Token;
 
 size_t start = 0;
 size_t current = 0;
@@ -86,7 +30,7 @@ void print_tokens(Token* tokens) {
   printf("[DEBUG] Tokens count: %lu \n", last_index);
   for (size_t i = 0; i < last_index; i++) {
     Token t = tokens[i];
-    printf("Token: %s %lu \n", t.lexeme, t.line);
+    printf("Token: %s %d \n", t.lexeme, t.line);
   }
 }
 
