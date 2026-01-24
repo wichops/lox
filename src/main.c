@@ -2,111 +2,28 @@
 #include <string.h>
 #include <sysexits.h>
 #include <stdio.h>
+
 #include "token.h"
+#include "scanner.h"
+#include "error.h"
 
-#define eprintf(...) fprintf (stderr, __VA_ARGS__)
-
-int HAD_ERROR = 0;
-
-size_t start = 0;
-size_t current = 0;
-size_t last_index = 0;
-size_t line = 1;
-size_t len = 0;
-
-void report(int line, char* where, char* message) {
-  printf("[DEBUG] report()\n");
-  eprintf("Line %d - Error %s: %s", line, where, message);
-}
-
-void error(int line, char* message) {
-  printf("[DEBUG] error()\n");
-  report(line, "", message);
-  HAD_ERROR = 1;
-}
-
-void print_tokens(Token* tokens) {
+void print_tokens(Token* tokens, size_t count) {
   printf("[DEBUG] print_tokens()\n");
-  printf("[DEBUG] Tokens count: %lu \n", last_index);
-  for (size_t i = 0; i < last_index; i++) {
+  printf("[DEBUG] Tokens count: %lu \n", count);
+  for (size_t i = 0; i < count; i++) {
     Token t = tokens[i];
     printf("Token: %s %d \n", t.lexeme, t.line);
   }
 }
 
-void add_token(TokenType type, Token* tokens, const char* source) {
-  size_t length = current - start;
-  char* lexeme = malloc(length);
-  printf("[DEBUG] start: %lu. current: %lu\n", start, current);
-  strncpy(lexeme, source + start, length);
-
-  tokens[last_index] = (Token) {type, lexeme, line };
-  last_index++;
-}
-
-int is_at_end() {
-  return current >= len;
-}
-
-int match(const char* source, char expected) {
-  if (is_at_end()) return 0;
-  if (source[current] != expected) return 0;
-
-  current++;
-  return 1;
-}
-
-void scan_tokens(const char* source, Token* tokens) {
-  len = strlen(source);
-  last_index = 0;
-  start = 0;
-  current = 0;
-  line = 1;
-
-  printf("[DEBUG] scan_tokens()\n");
-  /* while (current < len) { */
-  while (!is_at_end()) {
-    start = current;
-    char c = source[current++];
-    printf("[DEBUG] %c %lu %lu \n", c, start, current);
-    switch (c) {
-      case '(': add_token(LEFT_PAREN, tokens, source); break;
-      case ')': add_token(RIGHT_PAREN, tokens, source); break;
-      case '{': add_token(LEFT_BRACE, tokens, source); break;
-      case '}': add_token(RIGHT_BRACE, tokens, source); break;
-      case ',': add_token(COMMA, tokens, source); break;
-      case '.': add_token(DOT, tokens, source); break;
-      case '-': add_token(MINUS, tokens, source); break;
-      case '+': add_token(PLUS, tokens, source); break;
-      case ';': add_token(SEMICOLON, tokens, source); break;
-      case '*': add_token(STAR, tokens, source); break;
-      case '!':
-        add_token(match(source, '=') ? BANG_EQUAL : BANG, tokens, source);
-        break;
-      case '=':
-        add_token(match(source, '=') ? EQUAL_EQUAL : EQUAL, tokens, source);
-        break;
-      case '<':
-        add_token(match(source, '=') ? LESS_EQUAL : LESS, tokens, source);
-        break;
-      case '>':
-        add_token(match(source, '=') ? GREATER_EQUAL : GREATER, tokens, source);
-        break;
-      default:
-        error(line, "Unexpected character.");
-        break;
-    }
-    line++;
-  }
-
-  tokens[last_index] = (Token){ EOF, "", line};
-}
-
-void run(const char* program) {
-  printf("[DEBUG] run() \n %s \n", program);
+void run(const char* source) {
+  printf("[DEBUG] run() \n %s \n", source);
   Token tokens[500];
-  scan_tokens(program, tokens);
-  print_tokens(tokens);
+  Scanner scanner;
+  Scanner* s = &scanner;
+  scanner_init(s, source);
+  scanner_scan_tokens(s, tokens);
+  print_tokens(tokens, s->last_index);
 }
 
 void run_file(const char* filename) {
@@ -131,10 +48,10 @@ void run_file(const char* filename) {
   }
 }
 
-void run_prompt() {
+void run_prompt(void) {
   char buffer[200];
   printf("> ");
-  while (scanf("%s", buffer) != EOF) {
+  while (fgets(buffer, 199, stdin) != NULL) {
     run(buffer);
     HAD_ERROR = 0;
     printf("> ");

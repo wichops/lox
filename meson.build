@@ -12,7 +12,9 @@ project('lox',
 inc = include_directories('include')
 
 src = files(
-  'src/main.c'
+  'src/main.c',
+  'src/scanner.c',
+  'src/error.c'
 )
 
 executable('lox',
