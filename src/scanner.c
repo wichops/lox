@@ -22,7 +22,27 @@ static int match(Scanner *s, char expected) {
   return 1;
 }
 
+static char peek(Scanner *s) {
+  if (is_at_end(s)) return '\0';
+  return s->source[s->current];
+}
+
+/* static void string(Scanner *s) { */
+/*   while (peek(s) != '"' && is_at_end(s)) { */
+/*     if (peek(s) == '\n') s->line++; */
+/*     advance(s); */
+/*   } */
+
+/*   if (is_at_end(s)) { */
+/*     error(s->line, "Unterminated string"); */
+/*     return; */
+/*   } */
+
+/*   advance(s); */
+/* } */
+
 static void add_token(Scanner* s, TokenType type, Token* tokens) {
+  printf("[DEBUG] add_token()\n");
   size_t length = s->current - s->start;
   char* lexeme = malloc(length);
   printf("[DEBUG] start: %lu. current: %lu\n", s->start, s->current);
@@ -58,6 +78,15 @@ void scanner_scan_tokens(Scanner *s, Token* tokens) {
       case '+': add_token(s, PLUS, tokens); break;
       case ';': add_token(s, SEMICOLON, tokens); break;
       case '*': add_token(s, STAR, tokens); break;
+      case '/':
+        if (match(s, '/')) {
+          while (peek(s) != '\n' && !is_at_end(s)) {
+            advance(s);
+          }
+        } else {
+          add_token(s, SLASH, tokens);
+        }
+        break;
       case '!':
         add_token(s, match(s, '=') ? BANG_EQUAL : BANG, tokens);
         break;
@@ -70,9 +99,12 @@ void scanner_scan_tokens(Scanner *s, Token* tokens) {
       case '>':
         add_token(s, match(s, '=') ? GREATER_EQUAL : GREATER, tokens);
         break;
-      default:
-        error(s->line, "Unexpected character.");
+      case ' ':
+      case '\r':
+      case '\t':
         break;
+      case '\n': s->line++; break;
+      default: error(s->line, "Unexpected character."); break;
     }
     s->line++;
   }
