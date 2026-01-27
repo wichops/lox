@@ -27,19 +27,23 @@ static char peek(Scanner *s) {
   return s->source[s->current];
 }
 
-/* static void string(Scanner *s) { */
-/*   while (peek(s) != '"' && is_at_end(s)) { */
-/*     if (peek(s) == '\n') s->line++; */
-/*     advance(s); */
-/*   } */
+static void add_literal_token(Scanner* s, TokenType type, literal literal, TokenArray* tokens) {
+  printf("[DEBUG] add_literal_token()\n");
+  size_t length = s->current - s->start;
+  char* lexeme = malloc(length);
 
-/*   if (is_at_end(s)) { */
-/*     error(s->line, "Unterminated string"); */
-/*     return; */
-/*   } */
+  printf("[DEBUG] start: %lu. current: %lu\n", s->start, s->current);
+  strncpy(lexeme, s->source + s->start, length);
 
-/*   advance(s); */
-/* } */
+  Token t = {0};
+  t.lexeme = lexeme;
+  t.type = type;
+  t.line = s->line;
+  t.literal = literal;
+  t.has_literal = 1;
+
+  tokens_add(tokens, t);
+}
 
 static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   printf("[DEBUG] add_token()\n");
@@ -49,11 +53,35 @@ static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   strncpy(lexeme, s->source + s->start, length);
 
 
-  /* tokens[s->last_index] = (Token) {type, lexeme, s->line }; */
-  int literal = '\0';
-  Token t = {type, lexeme, s->line, {literal}};
+  Token t = {0};
+  t.lexeme = lexeme;
+  t.type = type;
+  t.line = s->line;
+  t.has_literal = 0;
+
   tokens_add(tokens, t);
 }
+
+static void string(Scanner *s, TokenArray* tokens) {
+  while (peek(s) != '"' && !is_at_end(s)) {
+    if (peek(s) == '\n') s->line++;
+    advance(s);
+  }
+
+  if (is_at_end(s)) {
+    error(s->line, "Unterminated string");
+    return;
+  }
+
+  literal l;
+  int size = s->current - 1 - s->start + 1;
+  char* slice = malloc(size);
+  strncpy(slice, &s->source[s->start + 1], size);
+  l.string_val = slice;
+  add_literal_token(s, STRING, l, tokens);
+  advance(s);
+}
+
 
 void scanner_init(Scanner* s, const char* source) {
   s->source = source;
@@ -64,7 +92,6 @@ void scanner_init(Scanner* s, const char* source) {
 
 void scanner_scan_tokens(Scanner *s, TokenArray* tokens) {
   printf("[DEBUG] scan_tokens()\n");
-  /* while (current < len) { */
   while (!is_at_end(s)) {
     s->start = s->current;
     char c = advance(s);
@@ -106,11 +133,16 @@ void scanner_scan_tokens(Scanner *s, TokenArray* tokens) {
       case '\t':
         break;
       case '\n': s->line++; break;
+      case '"': string(s, tokens); break;
       default: error(s->line, "Unexpected character."); break;
     }
-    s->line++;
   }
 
-  tokens_add(tokens, (Token){ EOF, "", s->line, {'\0'} });
-  /* tokens[s->last_index] = (Token){ EOF, "", s->line}; */
+
+  Token eof_token = {0};
+  eof_token.type = EOF;
+  eof_token.has_literal = 0;
+  eof_token.line = s->line;
+
+  tokens_add(tokens, eof_token);
 }

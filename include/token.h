@@ -54,37 +54,30 @@ typedef enum {
   EF // EOF alias because it is already defined in stdio
 } TokenType;
 
+typedef union {
+  float float_val;
+  char *string_val;
+} literal;
+
 typedef struct Token {
   TokenType type;
   char* lexeme;
   int line;
-  union {
-    float float_val;
-    char* string_val;
-  } literal;
+  literal literal;
+  int has_literal;
 } Token;
-
 
 typedef struct TokenArray {
   Token* array;
   size_t index;
 } TokenArray;
 
-
-inline TokenArray* tokens_create(void) {
-  Token* array = malloc(sizeof(Token) * 500);
-  TokenArray tokens_array = (TokenArray) { array, 0 };
-  TokenArray* tokens = &tokens_array;
-
-  return tokens;
-}
-
-inline Token* tokens_get(TokenArray* tokens, size_t index) {
+static inline Token* tokens_get(TokenArray* tokens, size_t index) {
   if (index >= tokens->index) return NULL;
   return &tokens->array[index];
 }
 
-inline void tokens_add(TokenArray* tokens, Token element) {
+static inline void tokens_add(TokenArray* tokens, Token element) {
   tokens->array[tokens->index++] = element;
 }
 

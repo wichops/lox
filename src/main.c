@@ -12,7 +12,19 @@ void print_tokens(TokenArray* tokens) {
   printf("[DEBUG] Tokens count: %lu \n", tokens->index);
   for (size_t i = 0; i < tokens->index; i++) {
     Token* t = tokens_get(tokens, i);
-    if (t != NULL) printf("Token: %s %d \n", t->lexeme, t->line);
+    if (t != NULL) {
+      printf("%d | Token: %s %d", t->line, t->lexeme, t->line);
+      if (t->has_literal) {
+        switch(t->type) {
+          case STRING:
+            printf(" -> %s", t->literal.string_val);
+            break;
+          default:
+            break;
+        }
+      }
+      printf("\n");
+    }
   }
 }
 
