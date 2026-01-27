@@ -7,23 +7,25 @@
 #include "scanner.h"
 #include "error.h"
 
-void print_tokens(Token* tokens, size_t count) {
+void print_tokens(TokenArray* tokens) {
   printf("[DEBUG] print_tokens()\n");
-  printf("[DEBUG] Tokens count: %lu \n", count);
-  for (size_t i = 0; i < count; i++) {
-    Token t = tokens[i];
-    printf("Token: %s %d \n", t.lexeme, t.line);
+  printf("[DEBUG] Tokens count: %lu \n", tokens->index);
+  for (size_t i = 0; i < tokens->index; i++) {
+    Token* t = tokens_get(tokens, i);
+    if (t != NULL) printf("Token: %s %d \n", t->lexeme, t->line);
   }
 }
 
 void run(const char* source) {
   printf("[DEBUG] run() \n %s \n", source);
-  Token tokens[500];
+  Token* array = malloc(sizeof(Token) * 500);
+  TokenArray tokens = (TokenArray) { array, 0};
+
   Scanner scanner;
   Scanner* s = &scanner;
   scanner_init(s, source);
-  scanner_scan_tokens(s, tokens);
-  print_tokens(tokens, s->last_index);
+  scanner_scan_tokens(s, &tokens);
+  print_tokens(&tokens);
 }
 
 void run_file(const char* filename) {

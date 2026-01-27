@@ -41,15 +41,18 @@ static char peek(Scanner *s) {
 /*   advance(s); */
 /* } */
 
-static void add_token(Scanner* s, TokenType type, Token* tokens) {
+static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   printf("[DEBUG] add_token()\n");
   size_t length = s->current - s->start;
   char* lexeme = malloc(length);
   printf("[DEBUG] start: %lu. current: %lu\n", s->start, s->current);
   strncpy(lexeme, s->source + s->start, length);
 
-  tokens[s->last_index] = (Token) {type, lexeme, s->line };
-  s->last_index++;
+
+  /* tokens[s->last_index] = (Token) {type, lexeme, s->line }; */
+  int literal = '\0';
+  Token t = {type, lexeme, s->line, {literal}};
+  tokens_add(tokens, t);
 }
 
 void scanner_init(Scanner* s, const char* source) {
@@ -57,10 +60,9 @@ void scanner_init(Scanner* s, const char* source) {
   s->current = 0;
   s->start = 0;
   s->line = 1;
-  s->last_index = 0;
 }
 
-void scanner_scan_tokens(Scanner *s, Token* tokens) {
+void scanner_scan_tokens(Scanner *s, TokenArray* tokens) {
   printf("[DEBUG] scan_tokens()\n");
   /* while (current < len) { */
   while (!is_at_end(s)) {
@@ -109,5 +111,6 @@ void scanner_scan_tokens(Scanner *s, Token* tokens) {
     s->line++;
   }
 
-  tokens[s->last_index] = (Token){ EOF, "", s->line};
+  tokens_add(tokens, (Token){ EOF, "", s->line, {'\0'} });
+  /* tokens[s->last_index] = (Token){ EOF, "", s->line}; */
 }
