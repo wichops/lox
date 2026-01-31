@@ -1,5 +1,8 @@
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 
 #include "scanner.h"
 #include "token.h"
@@ -25,6 +28,11 @@ static int match(Scanner *s, char expected) {
 static char peek(Scanner *s) {
   if (is_at_end(s)) return '\0';
   return s->source[s->current];
+}
+
+static char peek_next(Scanner *s) {
+  if (s->current + 1 >= strlen(s->source)) return '\0';
+  return s->source[s->current + 1];
 }
 
 static void add_literal_token(Scanner* s, TokenType type, literal literal, TokenArray* tokens) {
@@ -62,6 +70,18 @@ static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   tokens_add(tokens, t);
 }
 
+static int is_digit(char c) {
+  return c >= '0' && c <= '9';
+}
+
+static int is_alpha(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+static int is_alphanumeric(char c) {
+  return is_digit(c) || is_alpha(c);
+ }
+
 static void string(Scanner *s, TokenArray* tokens) {
   while (peek(s) != '"' && !is_at_end(s)) {
     if (peek(s) == '\n') s->line++;
@@ -82,6 +102,40 @@ static void string(Scanner *s, TokenArray* tokens) {
   advance(s);
 }
 
+static void number(Scanner *s, TokenArray* tokens) {
+  while (is_digit(peek(s))) advance(s);
+
+  if (peek(s) == '.' && is_digit(peek_next(s))) {
+    advance(s);
+    while (is_digit(peek(s))) advance(s);
+  }
+
+  literal l;
+  float f = strtof(&s->source[s->start], NULL);
+  if (errno != 0) {
+    error(s->line, "Error parsing number token");
+    exit(EX_DATAERR);
+  }
+  l.float_val = f;
+
+  add_literal_token(s, NUMBER, l, tokens);
+}
+
+void identifier(Scanner* s, TokenArray* tokens) {
+  while(is_alphanumeric(peek(s))) advance(s);
+
+  /* int size = s->current - 1 - s->start + 1; */
+  /* char* slice = malloc(size); */
+  /* strncpy(slice, &s->source[s->start + 1], size); */
+  /* TokenType type = tokens_lookup(slice); */
+  TokenType type = tokens_lookup(&s->source[s->start]);
+
+  if ((int)type == -1) {
+    type = IDENTIFIER;
+  }
+  add_token(s, type, tokens);
+  /* free(slice); */
+}
 
 void scanner_init(Scanner* s, const char* source) {
   s->source = source;
@@ -134,13 +188,21 @@ void scanner_scan_tokens(Scanner *s, TokenArray* tokens) {
         break;
       case '\n': s->line++; break;
       case '"': string(s, tokens); break;
-      default: error(s->line, "Unexpected character."); break;
+      default:
+        if (is_digit(c)) {
+          number(s, tokens);
+        } else if (is_alpha(c)) {
+          identifier(s, tokens);
+        } else {
+          error(s->line, "Unexpected character.");
+        }
+        break;
     }
   }
 
 
   Token eof_token = {0};
-  eof_token.type = EOF;
+  eof_token.type = EF;
   eof_token.has_literal = 0;
   eof_token.line = s->line;
 

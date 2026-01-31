@@ -11,14 +11,18 @@ void print_tokens(TokenArray* tokens) {
   printf("[DEBUG] print_tokens()\n");
   printf("[DEBUG] Tokens count: %lu \n", tokens->index);
   for (size_t i = 0; i < tokens->index; i++) {
-    Token* t = tokens_get(tokens, i);
-    if (t != NULL) {
-      printf("%d | Token: %s %d", t->line, t->lexeme, t->line);
-      if (t->has_literal) {
-        switch(t->type) {
+    Token* token = tokens_get(tokens, i);
+    char* type_str = token_str(token->type);
+
+    if (token != NULL) {
+      printf("%d | %s: %s %d", token->line, type_str, token->lexeme, token->line);
+      if (token->has_literal) {
+        switch(token->type) {
           case STRING:
-            printf(" -> %s", t->literal.string_val);
+            printf(" -> %s", token->literal.string_val);
             break;
+          case NUMBER:
+            printf(" -> %f", token->literal.float_val);
           default:
             break;
         }
