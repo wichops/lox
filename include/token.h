@@ -133,13 +133,13 @@ static Keyword keywords[] = {
 typedef union {
   float float_val;
   char *string_val;
-} literal;
+} Literal;
 
 typedef struct Token {
   TokenType type;
   char* lexeme;
   int line;
-  literal literal;
+  Literal literal;
   int has_literal;
 } Token;
 
@@ -167,7 +167,6 @@ static inline int tokens_lookup(const char* word) {
 }
 
 static inline char* token_str(TokenType type) {
-  printf("type: %d\n", type);
   return token_strings[type];
 }
 

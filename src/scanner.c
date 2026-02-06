@@ -93,7 +93,7 @@ static void string(Scanner *s, TokenArray* tokens) {
     return;
   }
 
-  literal l;
+  Literal l;
   int size = s->current - 1 - s->start + 1;
   char* slice = malloc(size);
   strncpy(slice, &s->source[s->start + 1], size);
@@ -110,7 +110,7 @@ static void number(Scanner *s, TokenArray* tokens) {
     while (is_digit(peek(s))) advance(s);
   }
 
-  literal l;
+  Literal l;
   float f = strtof(&s->source[s->start], NULL);
   if (errno != 0) {
     error(s->line, "Error parsing number token");
