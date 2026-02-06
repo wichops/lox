@@ -23,8 +23,8 @@ typedef struct Expr {
 
 static Expr* expr_new(ExprType type) {
   Expr* e = malloc(sizeof(Expr));
-  e->type = type;
 
+  e->type = type;
   return e;
 }
 
@@ -34,6 +34,7 @@ static inline Expr* expr_new_binary(Token op, Expr* left, Expr* right) {
   e->data.binary.operation = op;
   e->data.binary.left = left;
   e->data.binary.right = right;
+  return e;
 }
 
 static inline Expr* expr_new_unary(Token* op, Expr* right) {
@@ -41,18 +42,21 @@ static inline Expr* expr_new_unary(Token* op, Expr* right) {
 
   e->data.unary.operation = op;
   e->data.unary.right = right;
+  return e;
 }
 
 static inline Expr* expr_new_literal(Literal value) {
   Expr* e = expr_new(EXPR_LITERAL);
 
   e->data.literal.value = value;
+  return e;
 }
 
 static inline Expr* expr_new_grouping(Expr* expr) {
   Expr* e = expr_new(EXPR_GROUPING);
 
   e->data.grouping.expression = expr;
+  return e;
 }
 
 #endif // EXPR_H_
