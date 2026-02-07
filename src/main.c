@@ -3,6 +3,7 @@
 #include <sysexits.h>
 #include <stdio.h>
 
+#include "expr.h"
 #include "token.h"
 #include "scanner.h"
 #include "error.h"
@@ -79,6 +80,7 @@ void run_prompt(void) {
 }
 
 int main(int argc, char *argv[]) {
+  print_test();
   if (argc > 2) {
     printf("Usage: jlox [script] \n");
     return EX_USAGE;

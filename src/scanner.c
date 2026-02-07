@@ -68,7 +68,6 @@ static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   t.lexeme = lexeme;
   t.type = type;
   t.line = s->line;
-  t.has_literal = 0;
 
   tokens_add(tokens, t);
 }
