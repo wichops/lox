@@ -38,7 +38,7 @@ static inline Expr* expr_new_binary(Token op, Expr* left, Expr* right) {
 }
 
 static inline Expr* expr_new_unary(Token* op, Expr* right) {
-  Expr* e = expr_new(EXPR_LITERAL);
+  Expr* e = expr_new(EXPR_UNARY);
 
   e->data.unary.operation = op;
   e->data.unary.right = right;

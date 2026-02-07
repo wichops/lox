@@ -3,6 +3,7 @@
 
 typedef struct {
   const char* source;
+  size_t len;
   size_t start;
   size_t current;
   size_t line;

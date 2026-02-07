@@ -15,14 +15,14 @@ void print_tokens(TokenArray* tokens) {
     char* type_str = token_str(token->type);
 
     if (token != NULL) {
-      printf("%d | %s: %s %d", token->line, type_str, token->lexeme, token->line);
+      printf("%d | %s: %s", token->line, type_str, token->lexeme);
       if (token->has_literal) {
         switch(token->type) {
           case STRING:
             printf(" -> %s", token->literal.string_val);
             break;
           case NUMBER:
-            printf(" -> %f", token->literal.float_val);
+            printf(" -> %.2f", token->literal.float_val);
           default:
             break;
         }
@@ -35,7 +35,7 @@ void print_tokens(TokenArray* tokens) {
 void run(const char* source) {
   printf("[DEBUG] run() \n %s \n", source);
   Token* array = malloc(sizeof(Token) * 500);
-  TokenArray tokens = (TokenArray) { array, 0};
+  TokenArray tokens = (TokenArray) { array, 0 };
 
   Scanner scanner;
   Scanner* s = &scanner;
@@ -54,13 +54,15 @@ void run_file(const char* filename) {
     fseek(f, 0, SEEK_END);
     length = ftell(f);
     fseek(f, 0, SEEK_SET);
-    buffer = malloc(length);
+    buffer = malloc(length + 1);
     if (buffer) {
       fread(buffer, 1, length, f);
+      buffer[length] = '\0';
     }
   }
 
   run(buffer);
+  free(buffer);
   if (HAD_ERROR) {
     exit(EX_DATAERR);
   }

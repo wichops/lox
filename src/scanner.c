@@ -31,18 +31,20 @@ static char peek(Scanner *s) {
 }
 
 static char peek_next(Scanner *s) {
-  if (s->current + 1 >= strlen(s->source)) return '\0';
+  if (s->current + 1 >= s->len) return '\0';
   return s->source[s->current + 1];
 }
 
-static void add_literal_token(Scanner* s, TokenType type, literal literal, TokenArray* tokens) {
+static void add_literal_token(Scanner* s, TokenType type, Literal literal, TokenArray* tokens) {
   printf("[DEBUG] add_literal_token()\n");
   size_t length = s->current - s->start;
-  char* lexeme = malloc(length);
+  char* lexeme = malloc(length + 1);
 
   printf("[DEBUG] start: %lu. current: %lu\n", s->start, s->current);
   strncpy(lexeme, s->source + s->start, length);
+  lexeme[length] = '\0';
 
+  printf("[DEBUG]literal %s\n", lexeme);
   Token t = {0};
   t.lexeme = lexeme;
   t.type = type;
@@ -55,10 +57,11 @@ static void add_literal_token(Scanner* s, TokenType type, literal literal, Token
 
 static void add_token(Scanner* s, TokenType type, TokenArray* tokens) {
   printf("[DEBUG] add_token()\n");
-  size_t length = s->current - s->start;
-  char* lexeme = malloc(length);
+  size_t size = s->current - s->start;
+  char* lexeme = malloc(size+1);
   printf("[DEBUG] start: %lu. current: %lu\n", s->start, s->current);
-  strncpy(lexeme, s->source + s->start, length);
+  strncpy(lexeme, s->source + s->start, size);
+  lexeme[size] = '\0';
 
 
   Token t = {0};
@@ -93,13 +96,17 @@ static void string(Scanner *s, TokenArray* tokens) {
     return;
   }
 
-  Literal l;
-  int size = s->current - 1 - s->start + 1;
-  char* slice = malloc(size);
-  strncpy(slice, &s->source[s->start + 1], size);
-  l.string_val = slice;
-  add_literal_token(s, STRING, l, tokens);
   advance(s);
+
+  Literal l;
+  int size = s->current - s->start - 2;
+  char* slice = malloc(size + 1);
+  strncpy(slice, &s->source[s->start + 1], size);
+  slice[size] = '\0';
+  l.string_val = slice;
+
+  printf("[DEBUG] string %s\n", slice);
+  add_literal_token(s, STRING, l, tokens);
 }
 
 static void number(Scanner *s, TokenArray* tokens) {
@@ -124,20 +131,16 @@ static void number(Scanner *s, TokenArray* tokens) {
 void identifier(Scanner* s, TokenArray* tokens) {
   while(is_alphanumeric(peek(s))) advance(s);
 
-  /* int size = s->current - 1 - s->start + 1; */
-  /* char* slice = malloc(size); */
-  /* strncpy(slice, &s->source[s->start + 1], size); */
-  /* TokenType type = tokens_lookup(slice); */
   TokenType type = tokens_lookup(&s->source[s->start]);
 
   if ((int)type == -1) {
     type = IDENTIFIER;
   }
   add_token(s, type, tokens);
-  /* free(slice); */
 }
 
 void scanner_init(Scanner* s, const char* source) {
+  s->len = strlen(source);
   s->source = source;
   s->current = 0;
   s->start = 0;
