@@ -14,7 +14,8 @@ inc = include_directories('include')
 src = files(
   'src/main.c',
   'src/scanner.c',
-  'src/error.c'
+  'src/error.c',
+  'src/parser.c'
 )
 
 executable('lox',

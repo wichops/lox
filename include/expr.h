@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 typedef enum { EXPR_BINARY, EXPR_GROUPING, EXPR_LITERAL, EXPR_UNARY } ExprType;
-typedef enum { L_NUMBER, L_STR } LiteralType;
+typedef enum { L_NUMBER, L_STR, L_FALSE, L_TRUE, L_NIL } LiteralType;
 
 typedef struct Expr {
   ExprType type;
@@ -53,8 +53,42 @@ static inline Expr *expr_new_unary(Token *op, Expr *right) {
   return e;
 }
 
-static inline Expr *expr_new_literal_number(double value) {
+static inline Expr* expr_new_literal(Token* token) {
+
   Expr *e = expr_new(EXPR_LITERAL);
+
+  if (token->type == NUMBER) e->data.literal.type = L_NUMBER;
+  if (token->type == STRING) e->data.literal.type = L_STR;
+
+  e->data.literal.value = token->literal;
+
+  return e;
+}
+
+static inline Expr* expr_new_literal_nil(void) {
+  Expr *e = expr_new(EXPR_LITERAL);
+  e->data.literal.type = L_NIL;
+
+  return e;
+}
+
+static inline Expr* expr_new_literal_false(void) {
+  Expr *e = expr_new(EXPR_LITERAL);
+  e->data.literal.type = L_FALSE;
+
+  return e;
+}
+
+static inline Expr* expr_new_literal_true(void) {
+  Expr *e = expr_new(EXPR_LITERAL);
+  e->data.literal.type = L_TRUE;
+
+  return e;
+}
+
+static inline Expr* expr_new_literal_number(double value) {
+  Expr *e = expr_new(EXPR_LITERAL);
+  e->data.literal.type = L_NUMBER;
   e->data.literal.value.float_val = value;
 
   return e;
@@ -94,9 +128,16 @@ static inline void expr_print_ast(Expr *expr) {
     case EXPR_LITERAL:
       if (node.data.literal.type == L_STR) {
         printf("%s", node.data.literal.value.string_val);
-      } else {
+      } else if (node.data.literal.type == L_FALSE) {
+        printf("FALSE");
+      } else if (node.data.literal.type == L_TRUE) {
+        printf("TRUE");
+      } else if (node.data.literal.type == L_NUMBER) {
         printf("%.2f", node.data.literal.value.float_val);
+      } else {
+        printf("NIL");
       }
+      printf(" ");
       break;
     case EXPR_UNARY:
       printf("(");

@@ -1,6 +1,2 @@
->=!===<=
 // this is a comment
-"hola mundo"
-5.90 + 20
-yes or what
-+-*(){}
+false != true

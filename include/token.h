@@ -159,6 +159,7 @@ static inline void tokens_add(TokenArray* tokens, Token element) {
 
 static inline int tokens_lookup(const char* word) {
   for (int i = 0; keywords[i].word; i++) {
+    printf("%s == %s\n ", word, keywords[i].word);
     if (strcmp(keywords[i].word, word) == 0) {
       return keywords[i].type;
     }

@@ -130,7 +130,11 @@ static void number(Scanner *s, TokenArray* tokens) {
 void identifier(Scanner* s, TokenArray* tokens) {
   while(is_alphanumeric(peek(s))) advance(s);
 
-  TokenType type = tokens_lookup(&s->source[s->start]);
+  int size = s->current - s->start;
+  char* slice = malloc(size + 1);
+  strncpy(slice, &s->source[s->start], size);
+  TokenType type = tokens_lookup(slice);
+  free(slice);
 
   if ((int)type == -1) {
     type = IDENTIFIER;

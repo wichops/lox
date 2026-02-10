@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "expr.h"
+#include "parser.h"
 #include "token.h"
 #include "scanner.h"
 #include "error.h"
@@ -40,9 +41,17 @@ void run(const char* source) {
 
   Scanner scanner;
   Scanner* s = &scanner;
+
   scanner_init(s, source);
   scanner_scan_tokens(s, &tokens);
   print_tokens(&tokens);
+
+  Parser p;
+  parser_init(&p, &tokens);
+
+  Expr* ast = parser_parse(&p);
+  expr_print_ast(ast);
+  printf("\n");
 }
 
 void run_file(const char* filename) {
